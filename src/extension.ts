@@ -254,12 +254,20 @@ export function activate(context: vscode.ExtensionContext) {
 		const input = await vscode.window.showInputBox({
 			prompt: 'Enter the reddit_session token value (do not include the "reddit_session=" prefix). Leave empty to clear the cookie.',
 			placeHolder: 'paste your reddit_session token here',
-			ignoreFocusOut: true
+			ignoreFocusOut: true,
+			password: true
 		});
 		// If user cancelled the input (Esc), input will be undefined - do nothing
 		if (typeof input !== 'undefined') {
-			await context.globalState.update('cookie', input || null);
-			if (input) {
+			// Trim whitespace
+			const trimmedInput = input.trim();
+			// Check if user is trying to paste the full cookie string
+			if (trimmedInput.startsWith('reddit_session=')) {
+				vscode.window.showWarningMessage('Please enter only the token value, not the "reddit_session=" prefix.');
+				return;
+			}
+			await context.globalState.update('cookie', trimmedInput || null);
+			if (trimmedInput) {
 				vscode.window.showInformationMessage('Reddit cookie saved.');
 			} else {
 				vscode.window.showInformationMessage('Reddit cookie cleared.');
