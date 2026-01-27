@@ -252,17 +252,17 @@ export function activate(context: vscode.ExtensionContext) {
 	 */
 	let setCookieCmd = vscode.commands.registerCommand('RedditViewer.SetCookie', async () => {
 		const input = await vscode.window.showInputBox({
-			prompt: '输入 reddit_session 的值（只需填 token，不要包含 "reddit_session=" 前缀）。留空回车可清除 cookie。',
-			placeHolder: 'your_reddit_session_token',
+			prompt: 'Enter the reddit_session token value (do not include the "reddit_session=" prefix). Leave empty to clear the cookie.',
+			placeHolder: 'paste your reddit_session token here',
 			ignoreFocusOut: true
 		});
 		// If user cancelled the input (Esc), input will be undefined - do nothing
 		if (typeof input !== 'undefined') {
-			await context.globalState.update('cookie', input ? input : null);
+			await context.globalState.update('cookie', input || null);
 			if (input) {
-				vscode.window.showInformationMessage('Reddit cookie 已保存（globalState.cookie）。');
+				vscode.window.showInformationMessage('Reddit cookie saved.');
 			} else {
-				vscode.window.showInformationMessage('Reddit cookie 已清除。');
+				vscode.window.showInformationMessage('Reddit cookie cleared.');
 			}
 		}
 	});
