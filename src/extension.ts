@@ -245,10 +245,33 @@ export function activate(context: vscode.ExtensionContext) {
 		vscode.env.openExternal(vscode.Uri.parse(url));
 	});
 
+	/**
+	 * Command to set reddit_session cookie manually
+	 * 
+	 * @category Extension - Command
+	 */
+	let setCookieCmd = vscode.commands.registerCommand('RedditViewer.SetCookie', async () => {
+		const input = await vscode.window.showInputBox({
+			prompt: '输入 reddit_session 的值（只需填 token，不要包含 "reddit_session=" 前缀）。留空回车可清除 cookie。',
+			placeHolder: 'your_reddit_session_token',
+			ignoreFocusOut: true
+		});
+		// If user cancelled the input (Esc), input will be undefined - do nothing
+		if (typeof input !== 'undefined') {
+			await context.globalState.update('cookie', input ? input : null);
+			if (input) {
+				vscode.window.showInformationMessage('Reddit cookie 已保存（globalState.cookie）。');
+			} else {
+				vscode.window.showInformationMessage('Reddit cookie 已清除。');
+			}
+		}
+	});
+
 	// add command
 	context.subscriptions.push(openRedditViewer);
 	context.subscriptions.push(openArticle);
 	context.subscriptions.push(openBrowser);
+	context.subscriptions.push(setCookieCmd);
 }
 
 /**
