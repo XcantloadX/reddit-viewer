@@ -71,7 +71,12 @@ export async function getSubredditTrend(data: IAPIData): Promise<ITrendsResult> 
             const rest: rm.RestClient = new rm.RestClient('subreddit.trend', baseHost, undefined, { socketTimeout: data.timeout });
             let url: string = "api/trending_subreddits/.json?";
             url += "raw_json=1";
-            rest.get<ITrendsResult>(url)
+            const options = data.cookie ? {
+                additionalHeaders: {
+                    "Cookie": "reddit_session=" + data.cookie
+                }
+            } : undefined;
+            rest.get<ITrendsResult>(url, options)
                 .then(response => {
                     if (response.result) {
                         resolve(response.result);
@@ -104,7 +109,12 @@ export async function getSubredditDetail(data: IAPIData): Promise<IGenericResult
             const rest: rm.RestClient = new rm.RestClient('subreddit.detail', baseHost, undefined, { socketTimeout: data.timeout });
             let url: string = "r/" + encodeURIComponent(data.subreddit) + "/about/.json?";
             url += "raw_json=1";
-            rest.get<IGenericResult<ISubredditAbout>>(url)
+            const options = data.cookie ? {
+                additionalHeaders: {
+                    "Cookie": "reddit_session=" + data.cookie
+                }
+            } : undefined;
+            rest.get<IGenericResult<ISubredditAbout>>(url, options)
                 .then(response => {
                     if (response.result) {
                         resolve(response.result);
@@ -171,7 +181,12 @@ export async function getSubredditArticle(data: IAPIData): Promise<IGenericResul
                 url += "depth=" + data.depth + "&";
             }
             url += "raw_json=1";
-            rest.get<IGenericResult<IListing<IArticle>>>(url)
+            const options = data.cookie ? {
+                additionalHeaders: {
+                    "Cookie": "reddit_session=" + data.cookie
+                }
+            } : undefined;
+            rest.get<IGenericResult<IListing<IArticle>>>(url, options)
                 .then(response => {
                     if (response.result) {
                         resolve(response.result);
@@ -222,7 +237,12 @@ export async function getArticleDetail(data: IAPIData): Promise<[IGenericResult<
                 url += "depth=" + data.depth + "&";
             }
             url += "raw_json=1";
-            rest.get<[IGenericResult<IListing<IArticle>>, IGenericResult<IListing<IComment>>]>(url)
+            const options = data.cookie ? {
+                additionalHeaders: {
+                    "Cookie": "reddit_session=" + data.cookie
+                }
+            } : undefined;
+            rest.get<[IGenericResult<IListing<IArticle>>, IGenericResult<IListing<IComment>>]>(url, options)
                 .then(response => {
                     if (response.result) {
                         resolve(response.result);
@@ -275,7 +295,12 @@ export async function getArticleComment(data: IAPIData): Promise<[IGenericResult
                 url += "depth=" + data.depth + "&";
             }
             url += "raw_json=1";
-            rest.get<[IGenericResult<IListing<IArticle>>, IGenericResult<IListing<IComment>>]>(url)
+            const options = data.cookie ? {
+                additionalHeaders: {
+                    "Cookie": "reddit_session=" + data.cookie
+                }
+            } : undefined;
+            rest.get<[IGenericResult<IListing<IArticle>>, IGenericResult<IListing<IComment>>]>(url, options)
                 .then(response => {
                     if (response.result) {
                         resolve(response.result);
@@ -338,7 +363,12 @@ export async function getUserPage(data: IAPIData): Promise<IGenericResult<IListi
                 url += "limit=" + data.limit + "&";
             }
             url += "raw_json=1";
-            rest.get<IGenericResult<IListing<IArticle | IComment>>>(url)
+            const options = data.cookie ? {
+                additionalHeaders: {
+                    "Cookie": "reddit_session=" + data.cookie
+                }
+            } : undefined;
+            rest.get<IGenericResult<IListing<IArticle | IComment>>>(url, options)
                 .then(response => {
                     if (response.result) {
                         resolve(response.result);
@@ -372,7 +402,12 @@ export async function getUserAbout(data: IAPIData): Promise<IGenericResult<IUser
             const rest: rm.RestClient = new rm.RestClient('user.about', baseHost, undefined, { socketTimeout: data.timeout });
             let url: string = "user/" + encodeURIComponent(data.username) + "/about/.json?";
             url += "raw_json=1";
-            rest.get<IGenericResult<IUserAbout>>(url)
+            const options = data.cookie ? {
+                additionalHeaders: {
+                    "Cookie": "reddit_session=" + data.cookie
+                }
+            } : undefined;
+            rest.get<IGenericResult<IUserAbout>>(url, options)
                 .then(response => {
                     if (response.result) {
                         resolve(response.result);
@@ -433,7 +468,12 @@ export async function getUserSubmitted(data: IAPIData): Promise<IGenericResult<I
                 url += "limit=" + data.limit + "&";
             }
             url += "raw_json=1";
-            rest.get<IGenericResult<IListing<IArticle>>>(url)
+            const options = data.cookie ? {
+                additionalHeaders: {
+                    "Cookie": "reddit_session=" + data.cookie
+                }
+            } : undefined;
+            rest.get<IGenericResult<IListing<IArticle>>>(url, options)
                 .then(response => {
                     if (response.result) {
                         resolve(response.result);
@@ -494,7 +534,12 @@ export async function getUserComment(data: IAPIData): Promise<IGenericResult<ILi
                 url += "limit=" + data.limit + "&";
             }
             url += "raw_json=1";
-            rest.get<IGenericResult<IListing<IComment>>>(url)
+            const options = data.cookie ? {
+                additionalHeaders: {
+                    "Cookie": "reddit_session=" + data.cookie
+                }
+            } : undefined;
+            rest.get<IGenericResult<IListing<IComment>>>(url, options)
                 .then(response => {
                     if (response.result) {
                         resolve(response.result);
@@ -527,7 +572,12 @@ export async function getUserMulti(data: IAPIData): Promise<Array<IGenericResult
         if (baseHost && data.username) {
             const rest: rm.RestClient = new rm.RestClient('user.multi', baseHost, undefined, { socketTimeout: data.timeout });
             let url: string = "api/multi/user/" + encodeURIComponent(data.username) + "?raw_json=1";
-            rest.get<Array<IGenericResult<IMulti>>>(url)
+            const options = data.cookie ? {
+                additionalHeaders: {
+                    "Cookie": "reddit_session=" + data.cookie
+                }
+            } : undefined;
+            rest.get<Array<IGenericResult<IMulti>>>(url, options)
                 .then(response => {
                     if (response.result) {
                         resolve(response.result);
@@ -589,7 +639,12 @@ export async function getMultiArticle(data: IAPIData): Promise<IGenericResult<IL
                 url += "limit=" + data.limit + "&";
             }
             url += "raw_json=1";
-            rest.get<IGenericResult<IListing<IArticle>>>(url)
+            const options = data.cookie ? {
+                additionalHeaders: {
+                    "Cookie": "reddit_session=" + data.cookie
+                }
+            } : undefined;
+            rest.get<IGenericResult<IListing<IArticle>>>(url, options)
                 .then(response => {
                     if (response.result) {
                         resolve(response.result);
@@ -723,7 +778,12 @@ export async function getSearchSubreddit(data: IAPIData): Promise<ISubredditSear
             const rest: rm.RestClient = new rm.RestClient('search.subreddit', baseHost, undefined, { socketTimeout: data.timeout });
             let url: string = "api/search_reddit_names/.json?query=" + encodeURIComponent(data.search) + "&";
             url += "raw_json=1";
-            rest.get<ISubredditSearchResult>(url)
+            const options = data.cookie ? {
+                additionalHeaders: {
+                    "Cookie": "reddit_session=" + data.cookie
+                }
+            } : undefined;
+            rest.get<ISubredditSearchResult>(url, options)
                 .then(response => {
                     if (response.result) {
                         resolve(response.result);
@@ -784,7 +844,12 @@ export async function getSearchArticle(data: IAPIData): Promise<IGenericResult<I
                 url += "limit=" + data.limit + "&";
             }
             url += "raw_json=1";
-            rest.get<IGenericResult<IListing<IArticle>>>(url)
+            const options = data.cookie ? {
+                additionalHeaders: {
+                    "Cookie": "reddit_session=" + data.cookie
+                }
+            } : undefined;
+            rest.get<IGenericResult<IListing<IArticle>>>(url, options)
                 .then(response => {
                     if (response.result) {
                         resolve(response.result);
