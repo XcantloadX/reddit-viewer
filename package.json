@@ -35,7 +35,7 @@
   "activationEvents": [
     "onCommand:RedditViewer.Open",
     "onCommand:RedditViewer.OpenArticle",
-    "onCommand:RedditViewer.SetCookie",
+    "onCommand:RedditViewer.Login",
     "onView:Frontpage",
     "onView:Subreddit"
   ],
@@ -56,8 +56,8 @@
         "title": "Open Article in Browser"
       },
       {
-        "command": "RedditViewer.SetCookie",
-        "title": "RedditViewer: Set Cookie"
+        "command": "RedditViewer.Login",
+        "title": "RedditViewer: Login"
       },
       {
         "command": "RedditViewerWidget.FrontpageRefresh",

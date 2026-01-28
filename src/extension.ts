@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
-import { getView } from './controller/handler';
+import { getView, isAuthenticationError, promptForLogin } from './controller/handler';
 import { ArticleProvider } from './controller/provider';
 import { IConfigData } from './interfaces';
 
@@ -98,8 +98,10 @@ export function activate(context: vscode.ExtensionContext) {
 				panel.webview.html = response;
 			})
 			.catch(error => {
-				// catch common errors
-				if (error === "getaddrinfo ENOTFOUND reddit.com") {
+				// check for authentication errors
+				if (isAuthenticationError(error)) {
+					promptForLogin(context);
+				} else if (error === "getaddrinfo ENOTFOUND reddit.com") {
 					vscode.window.showErrorMessage("Error: no active connection to the internet.");
 				} else {
 					vscode.window.showErrorMessage(error);
@@ -116,8 +118,10 @@ export function activate(context: vscode.ExtensionContext) {
 						panel.webview.html = response;
 					})
 					.catch(error => {
-						// catch common errors
-						if (error === "getaddrinfo ENOTFOUND reddit.com") {
+						// check for authentication errors
+						if (isAuthenticationError(error)) {
+							promptForLogin(context);
+						} else if (error === "getaddrinfo ENOTFOUND reddit.com") {
 							vscode.window.showErrorMessage("Error: no active connection to the internet.");
 						} else {
 							vscode.window.showErrorMessage(error);
@@ -192,8 +196,10 @@ export function activate(context: vscode.ExtensionContext) {
 				panel.webview.html = response;
 			})
 			.catch(error => {
-				// catch common errors
-				if (error === "getaddrinfo ENOTFOUND reddit.com") {
+				// check for authentication errors
+				if (isAuthenticationError(error)) {
+					promptForLogin(context);
+				} else if (error === "getaddrinfo ENOTFOUND reddit.com") {
 					vscode.window.showErrorMessage("Error: no active connection to the internet.");
 				} else {
 					vscode.window.showErrorMessage(error);
@@ -210,8 +216,10 @@ export function activate(context: vscode.ExtensionContext) {
 						panel.webview.html = response;
 					})
 					.catch(error => {
-						// catch common errors
-						if (error === "getaddrinfo ENOTFOUND reddit.com") {
+						// check for authentication errors
+						if (isAuthenticationError(error)) {
+							promptForLogin(context);
+						} else if (error === "getaddrinfo ENOTFOUND reddit.com") {
 							vscode.window.showErrorMessage("Error: no active connection to the internet.");
 						} else {
 							vscode.window.showErrorMessage(error);
@@ -246,31 +254,97 @@ export function activate(context: vscode.ExtensionContext) {
 	});
 
 	/**
-	 * Command to set reddit_session cookie manually
+	 * Command to login to Reddit
+	 * Allows user to choose between cookie or username/password authentication
 	 * 
 	 * @category Extension - Command
 	 */
-	let setCookieCmd = vscode.commands.registerCommand('RedditViewer.SetCookie', async () => {
-		const input = await vscode.window.showInputBox({
-			prompt: 'Enter the reddit_session token value (do not include the "reddit_session=" prefix). Leave empty to clear the cookie.',
-			placeHolder: 'paste your reddit_session token here',
-			ignoreFocusOut: true,
-			password: true
-		});
-		// If user cancelled the input (Esc), input will be undefined - do nothing
-		if (typeof input !== 'undefined') {
-			// Trim whitespace
-			const trimmedInput = input.trim();
-			// Check if user is trying to paste the full cookie string
-			if (trimmedInput.startsWith('reddit_session=')) {
-				vscode.window.showWarningMessage('Please enter only the token value, not the "reddit_session=" prefix.');
-				return;
+	let loginCmd = vscode.commands.registerCommand('RedditViewer.Login', async (preselectedMethod?: string) => {
+		// If method is preselected (e.g., from auth error prompt), use it directly
+		let method = preselectedMethod;
+		
+		// Otherwise, ask user to choose
+		if (!method) {
+			method = await vscode.window.showQuickPick(
+				['Cookie', 'Username/Password'],
+				{
+					placeHolder: 'Choose login method',
+					ignoreFocusOut: true
+				}
+			);
+		}
+
+		if (!method) {
+			return; // User cancelled
+		}
+
+		// Normalize method name
+		const normalizedMethod = method.toLowerCase();
+
+		if (normalizedMethod === 'cookie') {
+			// Cookie login
+			const input = await vscode.window.showInputBox({
+				prompt: 'Enter the reddit_session token value (do not include the "reddit_session=" prefix). Leave empty to clear the cookie.',
+				placeHolder: 'paste your reddit_session token here',
+				ignoreFocusOut: true,
+				password: true
+			});
+			
+			// If user cancelled the input (Esc), input will be undefined - do nothing
+			if (typeof input !== 'undefined') {
+				// Trim whitespace
+				const trimmedInput = input.trim();
+				// Check if user is trying to paste the full cookie string
+				if (trimmedInput.startsWith('reddit_session=')) {
+					vscode.window.showWarningMessage('Please enter only the token value, not the "reddit_session=" prefix.');
+					return;
+				}
+				await context.globalState.update('cookie', trimmedInput || null);
+				if (trimmedInput) {
+					vscode.window.showInformationMessage('Reddit cookie saved. You are now logged in.');
+				} else {
+					vscode.window.showInformationMessage('Reddit cookie cleared.');
+				}
 			}
-			await context.globalState.update('cookie', trimmedInput || null);
-			if (trimmedInput) {
-				vscode.window.showInformationMessage('Reddit cookie saved.');
-			} else {
-				vscode.window.showInformationMessage('Reddit cookie cleared.');
+		} else if (normalizedMethod === 'credentials' || normalizedMethod === 'username/password') {
+			// Username/Password login
+			const username = await vscode.window.showInputBox({
+				prompt: 'Enter your Reddit username',
+				placeHolder: 'username',
+				ignoreFocusOut: true
+			});
+
+			if (!username) {
+				return; // User cancelled
+			}
+
+			const password = await vscode.window.showInputBox({
+				prompt: 'Enter your Reddit password',
+				placeHolder: 'password',
+				ignoreFocusOut: true,
+				password: true
+			});
+
+			if (!password) {
+				return; // User cancelled
+			}
+
+			// Import loginUser function
+			const { loginUser } = await import('./model/reddit');
+
+			try {
+				const response = await loginUser({
+					username: username,
+					password: password
+				});
+
+				// Save the cookie and username
+				await context.globalState.update('cookie', response.cookie);
+				await context.globalState.update('activeUser', username);
+				
+				vscode.window.showInformationMessage(`Successfully logged in as ${username}.`);
+			} catch (error) {
+				vscode.window.showErrorMessage(`Login failed: ${error}`);
 			}
 		}
 	});
@@ -279,7 +353,7 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(openRedditViewer);
 	context.subscriptions.push(openArticle);
 	context.subscriptions.push(openBrowser);
-	context.subscriptions.push(setCookieCmd);
+	context.subscriptions.push(loginCmd);
 }
 
 /**
