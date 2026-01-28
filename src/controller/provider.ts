@@ -123,6 +123,7 @@ export class ArticleProvider implements vscode.TreeDataProvider<any> {
         data.limit = this.subreddit_limit;
         data.sort = this.subreddit_sort;
         data.time = this.subreddit_time;
+        data.cookie = this.context.globalState.get('cookie');
         data.timeout = vscode.workspace.getConfiguration('RedditViewer').get('Timeout');
         getSubredditArticle(data).then(response => {
           resolve(response.data.children);

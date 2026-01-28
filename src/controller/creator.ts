@@ -9,6 +9,22 @@ import * as api from '../model/reddit';
 import { IConfigData, IAPIData, IGenericResult, IListing, IArticle, IComment } from '../interfaces';
 
 /**
+ * Helper function to add cookie to API data if available
+ * 
+ * @param apiData The API data object to add cookie to
+ * @param config The config containing context with globalState
+ * @category Controller - Creator
+ */
+function addCookieToApiData(apiData: IAPIData, config: IConfigData): void {
+  if (config.context) {
+    const cookie = config.context.globalState.get('cookie');
+    if (cookie) {
+      apiData.cookie = cookie as string;
+    }
+  }
+}
+
+/**
  * createHomeHTML creates the HTML string of the home view.
  * 
  * @param config 
@@ -42,7 +58,10 @@ export async function createHomeHTML(config: IConfigData): Promise<string> {
 
     // show trending subreddits
     if (vscode.workspace.getConfiguration('RedditViewer').get('HomeTrending')) {
-      let apiData: IAPIData = {};
+      let apiData: IAPIData = {
+        timeout: vscode.workspace.getConfiguration('RedditViewer').get('Timeout'),
+      };
+      addCookieToApiData(apiData, config);
       promises.push(api.getSubredditTrend(apiData));
     }
 
@@ -58,9 +77,7 @@ export async function createHomeHTML(config: IConfigData): Promise<string> {
         timeout: vscode.workspace.getConfiguration('RedditViewer').get('Timeout'),
       };
       // add user cookie
-      if (config.context) {
-        apiData.cookie = config.context.globalState.get('cookie') ? config.context.globalState.get('cookie') : undefined;
-      }
+      addCookieToApiData(apiData, config);
       // decide which page to get
       if (vscode.workspace.getConfiguration('RedditViewer').get('HomeFrontpageMine')) {
         // getMine
@@ -180,6 +197,7 @@ export async function createSearchHTML(config: IConfigData): Promise<string> {
       before: config.before ? config.before : undefined,
       timeout: vscode.workspace.getConfiguration('RedditViewer').get('Timeout'),
     };
+    addCookieToApiData(apiData, config);
 
     promises.push(api.getSearchSubreddit(apiData));
     promises.push(api.getSearchArticle(apiData));
@@ -280,6 +298,7 @@ export async function createSubredditHTML(config: IConfigData): Promise<string> 
       before: config.before ? config.before : undefined,
       timeout: vscode.workspace.getConfiguration('RedditViewer').get('Timeout'),
     };
+    addCookieToApiData(apiData, config);
 
     promises.push(api.getSubredditDetail(apiData));
     promises.push(api.getSubredditArticle(apiData));
@@ -367,6 +386,7 @@ export async function createArticleHTML(config: IConfigData): Promise<string> {
       depth: vscode.workspace.getConfiguration('RedditViewer').get('ArticleCommentDepth'),
       timeout: vscode.workspace.getConfiguration('RedditViewer').get('Timeout'),
     };
+    addCookieToApiData(apiData, config);
 
     api.getArticleDetail(apiData)
       .then(response => {
@@ -463,6 +483,7 @@ export async function createUserHTML(config: IConfigData): Promise<string> {
       before: config.before ? config.before : undefined,
       timeout: vscode.workspace.getConfiguration('RedditViewer').get('Timeout'),
     };
+    addCookieToApiData(apiData, config);
 
     // get the user about data
     promises.push(api.getUserAbout(apiData));

@@ -11,6 +11,43 @@ import * as creator from './creator';
 import { loginUser } from '../model/reddit';
 
 /**
+ * Check if error is a 403 authentication error
+ * 
+ * @param error Error message or object
+ * @returns true if it's a 403 authentication error
+ * @category Controller - Handler
+ */
+export function isAuthenticationError(error: any): boolean {
+    if (typeof error === 'string') {
+        // Check for 403 status code and network security block message
+        return (error.includes('403') || error.includes('Responsecode: 403')) && 
+               error.includes("You've been blocked by network security");
+    }
+    return false;
+}
+
+/**
+ * Show login prompt to user
+ * 
+ * @param context Extension context
+ * @category Controller - Handler
+ */
+export async function promptForLogin(context: vscode.ExtensionContext): Promise<void> {
+    const result = await vscode.window.showWarningMessage(
+        'Authentication required. Reddit has blocked this request. Please login to continue.',
+        'Login with Cookie',
+        'Login with Username/Password',
+        'Cancel'
+    );
+
+    if (result === 'Login with Cookie') {
+        await vscode.commands.executeCommand('RedditViewer.Login', 'cookie');
+    } else if (result === 'Login with Username/Password') {
+        await vscode.commands.executeCommand('RedditViewer.Login', 'credentials');
+    }
+}
+
+/**
  * homeViewCache saves temporary data of the home view
  */
 let homeViewCache: ViewCache = new ViewCache();
